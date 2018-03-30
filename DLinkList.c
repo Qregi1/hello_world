@@ -1,327 +1,388 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
-#include"DlinkList.h"
+#include"DLinkList.h"
 
-DLinkNode* CreatNewNode(DLinkType data) {
+//创建一个结点
+DLinkNode* CreatNewNode(DLinkType value) {
 
-	//给数据申请空间
-	DLinkNode* new_node = (DLinkNode*)malloc(sizeof(DLinkNode));
+	DLinkNode* Node = (DLinkNode*)malloc(sizeof(DLinkNode));
+	if (Node != NULL) {
 
-	if (new_node != NULL) {
-		new_node->data = data;
-		new_node->_next = NULL;
-		new_node->_prev = NULL;
+		Node->data = value;
+		Node->_next = NULL;
+		Node->_prev = NULL;
+
 	}
-	return new_node;
 
+	return Node;
 }
 
-//创建链表的头节点
-void DLinkListInit(DLinkNode** head) {
-	
-	if (head == NULL) {
-		return;
-	}
-	*head = CreatNewNode('0');
-	(*head)->_next = *head;
-	(*head)->_next = *head;
+//释放一个结点
+void DestoryNode(DLinkNode** node) {
 
-	
-}
-/*
-**尾插一个元素
-*/
-DLinkNode* DLinkListPushBack(DLinkNode* head, DLinkType value) {
-
-	if (head == NULL) {
-		printf("链表头节点初始化失败");
-		return;
-	}
-	DLinkNode* new_node = CreatNewNode(value);
-
-		int i = 0;
-		DLinkNode* cur = head;
-		/*
-		**如果链表里面有元素，通过遍历到链表的末尾，然后进行插入
-		*/
-		while (cur->_next != head) {
-			cur = cur->_next;
-		}
-		cur->_next = new_node;
-		new_node->_prev = cur;
-
-		head->_prev = new_node;
-		new_node->_next = head;
-
-}
-
-void PrintDLinkNode(DLinkNode* head,const char* msg) {
-
-	if (head == NULL) {
-		return;
-	}
-	//正着打印
-
-	printf("%s\n", msg);
-	DLinkNode* cur = head->_next;
-	printf("\n\n head -> ");
-	while (cur != head) {
-		printf(" [%c]->", cur->data);
-		cur = cur->_next;
-	}
-	printf("head\n");
-
-	//反着打印
-	DLinkNode* cur2 = head->_prev;
-	printf("\n\n head ->");
-	while (cur2 != head) {
-		printf(" [%c]->", cur2->data);
-		cur2 = cur2->_prev;
-	}
-	printf("head\n\n\n");
-
-}
-
-/*
-**销毁一个结点
-*/
-void DestoyNode(DLinkNode** node) {
 	if (node == NULL) {
-		//元素非法
+		//非法输入
 		return;
 	}
 	if (*node == NULL) {
-		//参数传入出错误
+		//结点传入错误
 		return;
 	}
 	free(*node);
 	*node = NULL;
+
 }
-/*
-**在双向链表中，尾删一个元素
-*/
-void DLinkListPopBack(DLinkNode* head) {
 
-	if (head == NULL) {
-		//初始化头结点失败
+//初始化双向链表
+DLinkList* InitDLinkList() {
+
+	DLinkList* plist = (DLinkList*)malloc(sizeof(DLinkList));
+	plist->head = CreatNewNode('0');
+
+	if (plist != NULL) {
+
+		if (plist->head != NULL) {
+
+			plist->head = plist->head;
+			plist->tail = plist->head;
+			plist->size = 0;
+
+		}
+		else {
+			return NULL;
+		}
+	}
+	return plist;
+}
+
+//判断链表是否为空
+int DLinkListEmpty(DLinkList* plist) {
+
+	if (plist == NULL) {
 		return;
 	}
+	if (plist->tail == plist->head &&
+		plist->size == 0) {
 
-	if (head->_next == head || head->_prev == head) {
-		printf("链表为空！");
+		return 1;
+
+	}
+	return 0;
+
+}
+//尾插一个元素
+DLinkList* DLinkListPushBack(DLinkList* plist, DLinkType value) {
+
+	if (plist->head == NULL) {
 		return;
 	}
+	DLinkNode* InsertNode = CreatNewNode(value);
+	DLinkNode* cur = plist->head;
+	//遍历链表，cur到最后尾指针位置
+	while (cur != plist->tail) {
 
-	DLinkNode* cur = head;
-
-	//通过循环遍历，找到最后一个元素cur
-	while (cur->_next != head) {
 		cur = cur->_next;
+
 	}
-	//创建一个结构体变量，pre代表倒数第二个元素
-	DLinkNode* pre = cur->_prev;
+	cur->_next = InsertNode;
+	InsertNode->_prev = cur;
 
-	head->_prev = pre;
-	pre->_next = head;
+	plist->tail = InsertNode;
 
-	DLinkNode* Delete = cur;
-	DestoyNode(&Delete);
-
+	plist->size++;
+	return InsertNode;
 }
 
+//打印整个链表
+void PrintChar(DLinkList* plist, char* msg) {
 
-/*
-**在双向链表中，头插一个元素
-*/
-void DLinkListPushFront(DLinkNode* head, DLinkType value) {
-
-	if (head == NULL) {
-		//头节点不存在，初始化错误
+	if (plist == NULL) {
 		return;
 	}
-	DLinkNode* NewNode = CreatNewNode(value);
-	//创建新结点存储数据
-	//爆粗链表的第一个元素
-	DLinkNode* OldNode = head->_next;
+	printf("%s\n", msg);
+	DLinkNode* cur1 = plist->head->_next;
 
-	head->_next = NewNode;
-	NewNode->_prev = head;
+	DLinkNode* cur2 = plist->tail;
+	if (cur1 == NULL || cur2->_prev == plist->head) {
+		//空链表
+		printf("\n\n[head]<-[tail]\n\n");
+		return;
+	}
+	//正着打印
+	printf("\n\n\n[head]->");
+	for (; cur1 != plist->tail; cur1 = cur1->_next) {
 
-	NewNode->_next = OldNode;
-	OldNode->_prev = NewNode;
+		printf("[%c]->", cur1->data);
+
+	}
+	printf("[%c]<-[tail]", cur1->data);
+	//反着打印
+	printf("\n\n\n[tail]->");
+	for (; cur2 != plist->head; cur2 = cur2->_prev) {
+		printf("[%c]->", cur2->data);
+	}
+	printf("[head]\n\n\n");
+}
+
+//尾删一个元素
+void DLinkListPopBack(DLinkList* plist) {
+
+	if (plist == NULL) {
+		return;
+	}
+	DLinkNode* cur = plist->head;
+	while (cur->_next != plist->tail) {
+
+		cur = cur->_next;
+
+	}
+	DLinkNode* Delete = cur->_next;
+	plist->tail = cur;
+
+	Delete->_prev = NULL;
+	cur->_next = NULL;
+	
+	plist->size--;
+
+	DestoryNode(&Delete);
+}
+
+//头插一个元素
+void DLinkListPushFront(DLinkList* plist, DLinkType value) {
+
+	if (plist == NULL) {
+		return;
+	}
+	DLinkNode* node = CreatNewNode(value);
+	DLinkNode* cur = plist->head->_next;
+
+	plist->head->_next = node;
+	node->_prev = plist->head;
+
+	node->_next = cur;
+	cur->_prev = node;
+
+	plist->size++;
 
 }
 
 //头删一个元素
-void DLinkListPopFront(DLinkNode* head) {
+void DLinkListPopFront(DLinkList* plist) {
 
-	if (head == NULL) {
+	if (plist == NULL) {
 		return;
 	}
-	//判断链表是否为空
-	if (head->_next == head || head->_prev == head) {
-		printf("链表为空！");
-		return;
-	}
+	//保存要删除的元素
+	DLinkNode* Delete = plist->head->_next;
+	DLinkNode* cur = plist->head->_next->_next;
 
-	//先保存要删除的结点
-	DLinkNode* Delete = head->_next;
-	//然后从链表拆除结点
-	DLinkNode* cur = head->_next->_next;
+	plist->head->_next = cur;
+	cur->_prev = plist->head;
 
-	head->_next = cur;
-	cur->_prev = head;
-
-	DestoyNode(&Delete);
-
+	plist->size--;
+	DestoryNode(&Delete);
 }
 
-//查找一个元素
-DLinkNode* DLinkListFind(DLinkNode* head, DLinkType to_find) {
+//查找某个元素
+DLinkNode* DLinkListFind(DLinkList* plist, DLinkType to_find) {
 
-	if (head == NULL) {
+	if (plist == NULL) {
 		return;
 	}
-	DLinkNode* error = CreatNewNode('-1');
-	DLinkNode* cur = head->_next;
+	DLinkNode* cur = plist->head;
 
-	while (cur != head) {
+	while (cur != plist->tail) {
 
-		if (cur->data == to_find) {
-			return cur;
-		}
 		cur = cur->_next;
+		if (cur->data == to_find) {
+			//如果找到第一个值相等的元素，就返回cur
+			return cur;
+			
+		}
 	}
-	printf("链表中没有该元素！\n");
+	//如果查找失败了，记得释放结点
+	DLinkNode* error = CreatNewNode('-1');
+	printf("链表里未保存此元素");
 	return error;
 
 }
 
 //往指定位置之前插入一个元素
-void DLinkListInsert(DLinkNode* pos, DLinkType value) {
+void DLinkListInsert(DLinkList* plist,DLinkNode* pos, DLinkType value) {
 
 	if (pos == NULL) {
-		//传入的位置错误
 		return;
 	}
-	DLinkNode* Insert = CreatNewNode(value);
+	DLinkNode* cur = CreatNewNode(pos->data);
+	DLinkNode* pos_next = pos->_next;
+	//判断pos是否是最后一个元素
+	if (pos_next == NULL) {
 
-	DLinkNode* pre = pos->_prev;
-	//插入
-	pre->_next = Insert;
-	Insert->_prev = pre;
+		pos->_next = cur;
+		cur->_prev = pos;
 
-	Insert->_next = pos;
-	pos->_prev = Insert;
+		pos->data = value;
 
+		plist->tail = cur;
+
+		plist->size++;
+	}
+	else{
+		pos->_next = cur;
+		cur->_prev = pos;
+
+		cur->_next = pos_next;
+		pos_next->_prev = cur;
+
+		pos->data = value;
+		plist->size++;
+	}
 }
 
 //往指定位置之后插入一个元素
-void DLinkListInsertAfter(DLinkNode* pos, DLinkType value) {
+void DLinkListInsertAfter(DLinkList* plist,DLinkNode* pos, DLinkType value) {
 
-	if (pos == NULL) {
+	if (plist == NULL) {
 		return;
 	}
+	//创建新结点
+	DLinkNode* insert = CreatNewNode(value);
+	DLinkNode* pos_next = pos->_next;
 
-	DLinkNode* InsertAfter = CreatNewNode(value);
-	DLinkNode* PosNext = pos->_next;
+	if (pos_next == NULL) {
+		//当前结点是最后一个结点
+		pos->_next  = insert;
+		insert->_prev = pos;
 
-	//插入
-	pos->_next = InsertAfter;
-	InsertAfter->_prev = pos;
+		//更新尾指针和链表长度size
+		plist->size++;
+		plist->tail = insert;
+	}
+	else {
+		//交换
+		pos->_next = insert;
+		insert->_prev = pos;
 
-	InsertAfter->_next = PosNext;
-	PosNext->_prev = InsertAfter;
-
+		insert->_next = pos_next;
+		pos_next->_prev = insert;
+		//更新链表长度size
+		plist->size++;
+	}
 }
 
 //删除指定位置的元素
-void DLinkListErase(DLinkNode* pos) {
+void DLinkListErase(DLinkList* plist, DLinkNode* pos) {
 
-	if (pos == NULL) {
-		//位置传入错误
+	if (plist == NULL) {
 		return;
 	}
-	DLinkNode* before = pos->_prev;
-	DLinkNode* after = pos->_next;
+	DLinkNode* cur = plist->head;
+	while (cur->_next != pos) {
 
-	before->_next = after;
-	after->_prev = before;
+		cur = cur->_next;
+		if (cur->_next == NULL) {
+			printf("pos位置传入错误");
+			return;
+		}
 
-	DestoyNode(&pos);
+	}
+	DLinkNode* Delete = pos;
+	DLinkNode* pos_next = pos->_next;
 
+	if (pos_next == NULL) {
+		//pos为最后一个元素
+		cur->_next = NULL;
+		
+		//更新链表size，释放删除的结点的空间
+		plist->tail = cur;
+		plist->size--;
+		DestoryNode(&pos);
+
+	}
+	else{
+
+		//开始拆除结点
+		cur->_next = pos_next;
+		pos_next->_prev = cur;
+
+		plist->size--;
+		DestoryNode(&pos);
+
+	}
 }
 
 //删除指定值的元素
-void DLinkListRemove(DLinkNode* head, DLinkType value) {
+void DLinkListRemove(DLinkList* plist, DLinkType to_delete) {
 
-	if (head == NULL) {
-		//头节点不存在,初始化失败
+	if (plist == NULL) {
 		return;
 	}
-	DLinkNode* cur = head->_next;
-	while (cur != head) {
+	DLinkNode* cur = plist->head;
+	while (cur->_next->data != to_delete) {
 
-		//找到匹配的元素了
-		if (cur->data == value) {
-			DLinkNode* cur_prev = cur->_prev;
-			DLinkNode* cur_next = cur->_next;
-
-			//删除
-			cur_prev->_next = cur_next;
-			cur_next->_prev = cur_prev;
+		cur = cur->_next;
+		if (cur->_next == NULL) {
+			printf("链表中查不到此元素\n");
 			return;
-
 		}
+	
+	}
+	DLinkNode* del_next = cur->_next->_next;
+	DLinkNode* Delete = cur->_next;
+	if (del_next == NULL) {
+		//假如要删除的元素位于链表的最后一位，那么de_next一定为空指针
+		cur->_next = NULL;
+
+		//更新尾指针，size，并且释放删除的结点
+		plist->tail = cur;
+		plist->size--;
+		DestoryNode(&Delete);
+	}
+	else {
+
+		//拆除结点
+		cur->_next = del_next;
+		del_next->_prev = cur;
+
+		plist->size--;
+		DestoryNode(&Delete);
+	}
+}
+
+//删除所有指定值的元素
+void DLinkListRemoveAll(DLinkList* plist, DLinkType to_delete) {
+
+	if (plist == NULL) {
+		return;
+	}
+	int sz = plist->size;
+	while (sz--) {
+
+		//删除所有指定值的元素
+		DLinkListRemove(plist, to_delete);
+
+	}
+
+}
+
+//删除一个链表的所有元素
+void DLinkListClear(DLinkList* plist) {
+
+	if (plist == NULL) {
+		return;
+	}
+	DLinkNode* cur = plist->head->_next;
+	DLinkNode* to_free = plist->head->_next;
+
+	plist->tail = plist->head;
+	while (cur->_next != NULL) {
+
 		cur = cur->_next;
-	}
+		DestoryNode(&to_free);
+		to_free = cur;
 
-}
-
-//求出链表的长度
-size_t DLinkListSize(DLinkNode* head) {
-
-	if (head == NULL) {
-		return;
 	}
-	DLinkNode* cur = head->_next;
-	size_t sz = 0;
-	while (cur != head) {
-		++sz;
-		cur = cur->_next;
-	}
-	return sz;
-
-}
-
-//删除所有链表中指定值得元素
-void DLinkLisrRemoveAll(DLinkNode** head, DLinkType to_delete) {
-
-	if (head == NULL) {
-		return;
-	}
-	if (*head == NULL) {
-		return;
-	}
-	size_t sz = DLinkListSize(*head);
-	while (sz) {
-		DLinkListRemove(*head, to_delete);
-		sz--;
-	}
-
-}
-
-//判断链表是否为空
-int DLinkListEmpty(DLinkNode* head) {
-
-	if (head == NULL) {
-		return;
-	}
-	if (head->_next == head || head->_prev == head) {
-		return -1;
-	}
-	else{
-		return 1;
-	}
+	DestoryNode(&to_free);
+	plist->head->_next = NULL;
 
 }
