@@ -1,302 +1,69 @@
 #define _CRT_SECURE_NO_WARNINGS 1
-#include"String.h"
+#include "String.h"
 
-//增删改查
-//扩容
-void String::Expand(size_t n) {
-	//先申请大小为n的内存空间
-	char* tmp = new char[n];
-	//然后复制
-	strcpy(tmp, _str);
-	delete[] _str;
-	_str = tmp;
-	_capacity = n;
-}
-//增
-//尾插一个字符
-void String::PushBack(char ch) {
-	if (_size + 1 >= _capacity) {
-		//直接扩大两倍
-		Expand(_capacity * 2);
-	}
-	_str[_size++] = ch;
-	_str[_size] = '\0';
+//���캯��
+String::String(char* str = "")
+	:_str(new char[strlen(str) + 1])
+	, _pCount(new size_t(1)) {
+	
+	strcpy(_str, str);
 }
 
-//尾插一个字符串
-void String::PushBack(const char* str) {
-	size_t str_size = strlen(str);
-	if (str_size != 0) {
-		//如果不是空字符串就进行扩容
-		_capacity += str_size;
-		Expand(_capacity);
-		//然后再拷贝
-		while (*str != '\0') {
-			_str[_size++] = *str++;
-		}
-		_str[_size] = '\0';
-	}
+//�������캯��
+String::String(const String& s)
+	:_str(s._str)
+	,_pCount(s._pCount){
+	//�����ü������Ӹ�1
+	(*_pCount)++;
 }
-
-//头插一个字符
-void String::PushFront(char ch) {
-	if (_size + 1 >= _capacity) {
-		//扩容
-		Expand(_capacity * 2);
-	}
-	//要头插一个字符串，先把最后一个元素设置为\0
-	_str[_size + 1] = '\0';
-	for (int i = _size; i > 0; --i) {
-		_str[i] = _str[i - 1];
-	}
-	_str[0] = ch;
-	_size += 1;
-}
-
-//头插一个字符串
-void String::PushFront(const char* str) {
-	//计算出要插入的字符串的长度
-	size_t str_size = strlen(str);
-	//如果要插入的字符串的长度加上原有的字符串长度大于已有的容量，就进行扩容
-	if (str_size + _size + 1 >= _capacity) {
-		_capacity = str_size + _size + 1;
-		//扩容
-		Expand(_capacity);
-	}
-	//_capacity表示容量，总共可以有多少个元素
-	//事实上，我们可以认为_size是_str字符数组的最后一个元素了，因为它存的是'\0'
-	_str[_capacity - 1] = '\0';
-	//所以，最后一个元素应该是在_capacity-2的位置
-	size_t index_last = _capacity - 2;
-	while (_size) {
-		_str[index_last--] = _str[--_size];
-	}
-	_size = 0;
-	while (*str != '\0') {
-		_str[_size++] = *str++;
-	}
-	_size = _capacity - 1;
-}
-
-//尾删
-void String::PopBack() {
-	//判断字符串是否为空字符串
-	if (_size == 0) {
-		printf("字符串已为空!\n");
-		return;
-	}
-	_size--;
-	_str[_size] = '\0';
-}
-
-//在指定位置插入一个字符
-void String::Insert(size_t pos, char ch) {
-	if (pos > _size) {
-		//可以等于_size，表示尾插了一个字符
-		//为了让Insert更通用，就不调用pushback尾插了
-		printf("pos位置传入错误!\n");
-		return;
+//��������
+String::~String() {
+	if (*_pCount == 1) {
+		delete[] _str;
+		_str = NULL;
+		delete _pCount;
+		_pCount = NULL;
 	}
 	else {
-		//pos的位置是正常的，可以插入
-		if (_size + 1 >= _capacity) {
-			//扩容
-			Expand(_capacity*2);
+		(*_pCount)--;
+	}
+	cout << "~String" << endl;
+}
+
+//�ȺŸ�ֵ����������
+String& String::operator=(const String& s) {
+	if (&s != this) {
+		if (--(*_pCount) == 0) {
+			//����һ����������
+			String::~String();
 		}
-		//先把'\0'加上
-		_str[_size + 1] = '\0';
-		//先把pos之后的位置全部向后挪一个位置(包括pos)
-		for (int i = _size; i > (int)pos; --i) {
-			_str[i] = _str[i - 1];
-		}
-		//然后再在pos的位置插入字符
-		_str[pos] = ch;
-		_size++;
+		_str = s._str;
+		_pCount = s._pCount;
+		(*_pCount)++;
 	}
-}
-
-//在指定位置插入一个字符串
-void String::Insert(size_t pos, const char* str) {
-	//先判断参数是否正确
-	if (pos > _size) {
-		printf("pos位置传入错误!\n");
-		return;
-	}
-	//求出要插入字符串的长度
-	size_t str_size = strlen(str);
-	if (str_size == 0) {
-		//表示要插入的字符串是空字符串，直接返回
-		return;
-	}
-	//然后判断_capaciy是否足够
-	if (_size + str_size + 1 > _capacity) {
-		//原本字符串中字符的个数加上要插入的字符串字符的个数再加上'\0'就是我们需要的空间
-		_capacity = _size + str_size + 1;
-		Expand(_capacity);
-	}
-	//把'\0'先加上
-	int last_index = _size + str_size;
-	_str[last_index--] = '\0';
-	//然后把pos之后的字符串都向后挪str_size个位置
-	for (int i = _size - 1; i >= (int)pos; --i) {
-		_str[last_index--] = _str[i];
-	}
-	//然后从pos位置开始插入要插入的字符串
-	while (*str != '\0') {
-		_str[pos++] = *str++;
-	}
-	//更新size
-	_size = _capacity - 1;
-}
-
-//在指定位置之后删除长度为n的字符
-void String::Erase(size_t pos, size_t n) {
-	//判断参数的合法性
-	//pos等于_size是合法的，但是没有意义,'\0'是不能删除的
-	//所以这里直接就判断为不合法了
-	if (pos >= _size) {
-		//传入的位置pos不合法
-		printf("pos位置传入不合法!\n");
-		return;
-	}
-	//删除pos之后的n个元素
-	if (pos + n < _size) {
-		//删除pos之后n个字符
-		size_t index_erase = pos + n;
-		while (index_erase != _size) {
-			_str[pos++] = _str[index_erase++];
-		}
-	}
-	//当pos + n大于等于_size时，都是删除pos之后的所有元素
-	_str[pos] = '\0';
-	_size = pos;
-}
-
-//查找字符
-size_t String::Find(char ch) {
-	for (size_t i = 0; i < _size; ++i) {
-		if (_str[i] == ch) {
-			//找到了就返回下标
-			return i;
-		}
-	}
-	return -1;
-}
-
-//查找字符串
-size_t String::Find(const char* str) {
-	size_t index_str = 0;
-	//循环退出条件，要么查找到了，要么就是查找到了结尾也没有找到
-	while (_str[index_str] != '\0') {
-		if (_str[index_str] == *str) {
-			//开头的字符相等了
-			//可以匹配的查找了
-			size_t find_index = index_str;
-			size_t str_index = 0;
-			while (1) {
-				//如果遍历完了字符串str，就表示找到了
-				if (str[str_index] == '\0') {
-					//当str为NUL的时候，就表示匹配，直接返回下标
-					return index_str;
-				}
-				//如果不相等就结束循环
-				if (_str[find_index] != str[str_index]) {
-					break;
-				}
-				find_index++;
-				str_index++;
-			}//循环结束
-		}//表示不匹配了
-		//如果不相等就继续向前查找
-		index_str++;
-	}
-	return -1;
-}
-
-//运算符重载
-//+
-//字符
-String String::operator+(char ch) {
-	//重新开辟一块内存空间，然后加上去再返回？
-	String tmp(_str);
-	tmp.Insert(_size, ch);
-	return tmp;
-}
-
-//字符串
-String String::operator+(const char* str) {
-	String tmp(_str);
-	tmp.Insert(_size, str);
-	return tmp;
-}
-
-//+=
-//字符
-String& String::operator+=(char ch) {
-	Insert(_size, ch);
 	return *this;
 }
-
-//字符串
-String& String::operator+=(const char* str) {
-	Insert(_size, str);
-	return *this;
+//�����ַ���
+const char* String::C_str() {
+	return _str;
 }
 
-//比较
-bool String::operator>(const String& s) {
-	int i = 0;
-	while (_str[i] == s._str[i] && i < _size) {
-		//当两个字符串字符相等时进入循环
-		i++;
+//дʱ����
+void String::CopyOnWrite() {
+	//������ü�������1���ͱ�ʾ��ǰ�ַ���ֻ��һ��ָ��ָ��
+	//��ô���۽����κβ��������ԣ�Ϊ����Ϊ
+	if (*_pCount > 1) {
+		//�Ѿɵ����ü�����1
+		--(*_pCount);
+		char* new_str = new char[strlen(_str) + 1];
+		strcpy(new_str, _str);
+		_str = new_str;
+		//���¿����ɹ���_str�ļ�������һ���ڴ�ռ�
+		_pCount = new size_t(1);
 	}
-	//不相等或遍历完了_str时退出循环
-	if (i == _size) {
-		//表示_str遍历完了,则肯定不大于
-		return false;
-	}
-	return _str[i] > s._str[i] ? true : false;
 }
 
-bool String::operator==(const String& s) {
-	int i = 0;
-	while (_str[i] == s._str[i] && i < _size) {
-		i++;
-	}
-	//遍历两个字符串，如果遍历完了，则表示相等
-	if (i == _size && s._str[i] == '\0') {
-		return true;
-	}
-	else {
-		return false;
-	}
-
-}
-
-bool String::operator>=(const String& s) {
-	if (*this > s || *this == s) {
-		return true;
-	}
-	return false;
-}
-
-bool String::operator<(const String& s) {
-	if (!(*this >= s)) {
-		return true;
-	}
-	return false;
-}
-
-bool String::operator<=(const String& s) {
-	if (*this > s) {
-		return false;
-	}
-	return true;
-}
-
-bool String::operator!=(const String& s) {
-	if (*this == s) {
-		return false;
-	}
-	return true;
+char& String::operator[](size_t pos) {
+	CopyOnWrite();
+	return _str[pos];
 }
